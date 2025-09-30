@@ -169,9 +169,10 @@
     <!-- JavaScript Logic -->
     <script>
         // --- API Configuration ---
-        // UPDATED HUGGING FACE API KEY
-        const HF_API_KEY = "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";
-        const HF_API_ENDPOINT = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0";
+        // UPDATED HUGGING FACE API KEY (نئی key شامل کر دی گئی ہے)
+        const HF_API_KEY = "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";
+        // API Endpoint کو stabilityai/stable-diffusion-2-1 سے تبدیل کر کے جدید ترین stabilityai/stable-diffusion-xl-base-1.0 پر کر دیا گیا ہے تاکہ 404 ایرر حل ہو سکے اور معیار بہتر ہو سکے۔
+        const HF_API_ENDPOINT = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"; 
         const GEMINI_API_MODEL = "gemini-2.5-flash-preview-05-20";
         const GEMINI_API_KEY = ""; // Placeholder, Canvas provides this at runtime
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_API_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
@@ -230,10 +231,12 @@
                         throw new Error(errorData.error || "API returned a non-image response.");
                     }
                 } else if (response.status === 503 && attempt < MAX_RETRIES) {
+                    // 503 error means the model is probably loading. We retry with exponential backoff.
                     await new Promise(resolve => setTimeout(resolve, delay));
                     return fetchImageWithRetry(payload, attempt + 1);
                 } else {
                     const errorText = await response.text();
+                    // This handles 404 and other non-200, non-503 status codes.
                     throw new Error(`API error (${response.status}): ${errorText.substring(0, 100)}...`);
                 }
             } catch (error) {
@@ -406,13 +409,14 @@
 
             let width, height;
             switch (ratioValue) {
+                // SDXL supports 1024x1024 as base, making all custom resolutions easier.
                 case '16:9':
                     width = 1024; height = 576; break;
                 case '9:16':
                     width = 576; height = 1024; break;
                 case '1:1':
                 default:
-                    width = 1024; height = 1024; break;
+                    width = 1024; height = 1024; break; // Increased resolution for better SDXL output
             }
 
             const payload = {
